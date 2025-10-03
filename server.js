@@ -51,29 +51,3 @@ app.use('/api/userProfiles', userProfileRoute);
 const patientFeedbackRoute = require('../backend-api/routes/patientFeedback.route');
 app.use(cors())
 app.use('/api/patientFeedback', patientFeedbackRoute);
-
-
-
-const surveyItemRoute = require('../backend-api/routes/surveyItems.route');
-app.use(cors())
-app.use('/api/surveyItems', surveyItemRoute);
-
-const customerRoute = require('../backend-api/routes/customers.route');
-app.use(cors())
-app.use('/api/customers', customerRoute);
-
-
-/*
-const surveyItem = require('../backend-api/models/surveyItem'); // surveyItem Model
-
-// CREATE surveyItem
-app.post('/api/surveyItems', async (req, res, next) => {
-    try {
-        const data = await surveyItem.create(req.body);
-        console.log(data);
-        res.json(data);
-    } catch (error) {
-        return next(error);
-    }
-});
-*/
