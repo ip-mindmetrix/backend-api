@@ -40,7 +40,7 @@ const measuresRoute = require('./routes/measures.route');
 app.use(cors())
 app.use('/api/measures', measuresRoute);
 
-const patientRoute = require('../backend-api/routes/patients.route');
+const patientRoute = require('./routes/patients.route');
 app.use(cors())
 app.use('/api/patients', patientRoute);
 
@@ -48,6 +48,6 @@ const userProfileRoute = require('./routes/userProfiles.route');
 app.use(cors())
 app.use('/api/userProfiles', userProfileRoute);
 
-const patientFeedbackRoute = require('../backend-api/routes/patientFeedback.route');
+const patientFeedbackRoute = require('./routes/patientFeedback.route');
 app.use(cors())
 app.use('/api/patientFeedback', patientFeedbackRoute);
