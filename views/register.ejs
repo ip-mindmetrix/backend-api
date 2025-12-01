@@ -35,7 +35,7 @@
                 };
                 const formData = JSON.stringify(payload)
                 console.log(formData)
-                fetch('http://64.126.41.240:5010/api/userProfiles/reset',{
+                fetch("<%= resetEndPoint %>",{
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
