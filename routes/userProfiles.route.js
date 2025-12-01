@@ -6,12 +6,14 @@ const userProfile = require('../models/userProfiles');
 const counter = require('../models/counter');
 const patient = require('../models/patients');
 let nodemailer = require('nodemailer');
+const crypto = require('crypto');
 require('dotenv').config(); // For loading environment variables
 
 
 // Load environment variables from .env file
 const { API_BASE_URL } = process.env;
 const { EMAIL_FROM } = process.env;
+const { ADMIN_USER_INVITE_RECIEVER } = process.env;
 const { DEFAULT_EMAIL_TO } = process.env;
 const { DEFAULT_EMAIL_CC } = process.env;
 const { EMAIL_API_KEY } = process.env;
@@ -45,7 +47,8 @@ router.post('/invite/:pid', async (req, res, next) => {
                         console.log(pt.emailId)
                         const user = await userProfile.findOneAndUpdate(
                             {userName:pt.emailId},
-                            {userProfileId:myUUID, 
+                            {userProfileId:myUUID,
+                            password : "",     
                             userStatus:"Invited",
                             updatedBy:"Admin"
                             },
@@ -93,12 +96,12 @@ router.post('/invite/:pid', async (req, res, next) => {
                         let transporter = nodemailer.createTransport({
                             service: 'gmail',
                             auth: {
-                            user: 'wholesomeinvestorsks@gmail.com',
-                            pass: 'upxe gdnn dnfj dwam'
+                            user: EMAIL_FROM,
+                            pass: EMAIL_API_KEY
                         }
                         });
                         let mailOptions = {
-                        from: 'wholesomeinvestorsks@gmail.com',
+                        from: EMAIL_FROM,
                         to: 'yejellar@gmail.com',
                         subject: 'User registration',
                         text: 'Please register by clicking the below link \n' +API_BASE_URL+'/userProfiles/register/'+myUUID
@@ -121,12 +124,77 @@ router.post('/invite/:pid', async (req, res, next) => {
     }        
 });
 
+// CREATE userProfile
+
+router.post('/inviteAdmin/:userName', async (req, res, next) => {    
+    try {
+            const myUUID = crypto.randomUUID();
+            console.log("Inviting " + req.params.userName)
+            const user = await userProfile.findOneAndUpdate(
+                {userName:req.params.userName},
+                {userProfileId:myUUID,
+                password : "", 
+                userStatus:"Invited",
+                updatedBy:"System"
+                },
+                { new: false }                            
+            );
+            if (user==null){
+                try {                    
+                    const newUserProfile = new userProfile(
+                        {
+                            userProfileId:myUUID,
+                            userName:req.params.userName,
+                            patientId:0,
+                            userType:"Admin",
+                            userStatus:"Invited",
+                            createdBy:"System",
+                            updatedBy:"System"
+                        }
+                    )
+                    newUserProfile.save()
+                    console.log(newUserProfile);
+                } catch (error) {
+                    return next(error);
+                }
+            } else {
+                    console.log("userProfile has already been invited!" + user.userProfileId);  
+            }                        
+            let transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                user: EMAIL_FROM,
+                pass: EMAIL_API_KEY
+            }
+            });
+            let mailOptions = {
+            from: EMAIL_FROM,
+            to: ADMIN_USER_INVITE_RECIEVER,
+            cc: [DEFAULT_EMAIL_CC],
+            subject: 'Admin User registration',
+            text: 'Please register by clicking the below link \n' +API_BASE_URL+'/userProfiles/register/'+myUUID
+            };
+            transporter.sendMail(mailOptions, function(error, info){
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+            });                                
+            console.log("userProfile invited successfully!");
+            res.json("userProfile has been invited!");  
+    } catch (error) {
+        return next(error);
+    }        
+});
+
 router.post('/forgotpwd/:userName', async (req, res, next) => {    
     try {
         const myUUID = crypto.randomUUID();
         const user = await userProfile.findOneAndUpdate(
             {userName:req.params.userName},
-            {userProfileId:myUUID, 
+            {userProfileId:myUUID,
+            password : "",  
             userStatus:"Forgot Pwd",
             updatedBy:"Admin"
             },
@@ -166,6 +234,7 @@ router.post('/forgotpwd/:userName', async (req, res, next) => {
 
 router.get('/register/:profileId', async (req, res, next) => { 
     try {
+        const resetEndPoint =  API_BASE_URL+'/userProfiles/reset'
         const user = await userProfile.findOne({userProfileId:req.params.profileId},{userName:1});        
         if (user==null){
             let errMsg = "userProfile invite does not exists in system"
@@ -173,10 +242,9 @@ router.get('/register/:profileId', async (req, res, next) => {
             res.status(404).json({
                 msg: errMsg,
             });           
-        } else {        
-        console.log(user);
-        //res.json(user);
-        res.render('register',{user});
+        } else {
+            console.log(user);
+            res.render('register',{user,resetEndPoint});
         } 
     } catch (error) {
         return next(error);
